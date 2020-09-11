@@ -1,11 +1,12 @@
 package com.connect4.contracts
 
 import com.connect4.states.BoardState
-import com.connect4.states.GameState
 import com.connect4.states.GameStatus
-import net.corda.core.contracts.*
+import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.Contract
+import net.corda.core.contracts.requireSingleCommand
+import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
-import java.lang.IllegalArgumentException
 
 // ************
 // * Contract *
@@ -44,7 +45,10 @@ class BoardContract : Contract {
                 "There should be one board as an output." using (outputs.size == 1)
 
                 //Constraints on the shape of the BoardState
-                "Cannot have two moves on the same cell." using (!inputs[0].boardMap!!.mapValues{ it.value }.containsValue(outputs [0].boardMap!![outputs[0].moveNumber]))
+                if(inputs[0].moveNumber>1){
+                    "Cannot have two moves on the same cell." using (!inputs[0].boardMap!!.mapValues{it.value.getPosition()}
+                            .containsValue((outputs[0].boardMap!![inputs[0].moveNumber] ?: error("No Cell At Position")).getPosition()))
+                }
                 "A player cannot have two consecutive turns." using(inputs[0].nextTurn != outputs[0].nextTurn)
                 "The next turn must belong to one of the participants." using(outputs[0].participants.contains(outputs[0].nextTurn))
                 "Board state must remain active." using(outputs[0].status == GameStatus.ACTIVE)
@@ -60,11 +64,12 @@ class BoardContract : Contract {
                 "There should be one board as an output." using (outputs.size == 1)
 
                 //Constraints on the shape of the BoardState
-                "Cannot have two moves on the same cell." using (!inputs[0].boardMap!!.mapValues{ it.value }.containsValue(outputs [0].boardMap!![outputs[0].moveNumber]))
+                "Cannot have two moves on the same cell." using (!inputs[0].boardMap!!.mapValues{it.value.getPosition()}
+                        .containsValue((outputs[0].boardMap!![inputs[0].moveNumber] ?: error("No Cell At Position")).getPosition()))
                 "Board state must be completed when winning play is detected." using(outputs[0].status == GameStatus.COMPLETE)
 
                 // Constraints on the signers.
-                "The both players should sign the end of the game." using command.signers.containsAll(outputs[0].participants.map { it.owningKey }.distinct())
+                "Both players should sign the end of the game." using command.signers.containsAll(outputs[0].participants.map { it.owningKey }.distinct())
 
             }
             is Commands.Draw -> requireThat {
@@ -75,7 +80,7 @@ class BoardContract : Contract {
                 "Board state must be completed when a draw is detected." using(outputs[0].status == GameStatus.COMPLETE)
 
                 // Constraints on the signers.
-                "The player making the move should sign." using command.signers.containsAll(outputs[0].participants.map { it.owningKey }.distinct())
+                "Both players should sign the end of the game." using command.signers.containsAll(outputs[0].participants.map { it.owningKey }.distinct())
 
             }
             else -> throw IllegalArgumentException("Unknown command ${command.value}.")

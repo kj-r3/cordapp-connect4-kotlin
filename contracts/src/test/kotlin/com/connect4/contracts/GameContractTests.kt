@@ -172,7 +172,6 @@ class GameContractTests {
                     gameState.initiatorColor,
                     Color.BLACK,
                     gameState.boardSize,
-                    UniqueIdentifier(),
                     GameStatus.ACCEPTED ))
             command(bob.owningKey,GameContract.Commands.AcceptGame())
             `fails with`("One game can be consumed, in inputs, when accepting a new game.")
@@ -190,7 +189,6 @@ class GameContractTests {
                     gameState.initiatorColor,
                     Color.BLACK,
                     gameState.boardSize,
-                    UniqueIdentifier(),
                     GameStatus.ACCEPTED ))
             verifies()
         }
@@ -213,7 +211,6 @@ class GameContractTests {
                     gameState.initiatorColor,
                     Color.BLACK,
                     gameState.boardSize,
-                    UniqueIdentifier(),
                     GameStatus.ACTIVE ))
             command(bob.owningKey,GameContract.Commands.AcceptGame())
             `fails with`("The game should be accepted by the Participant.")
@@ -221,7 +218,7 @@ class GameContractTests {
     }
 
     @Test
-    fun `AcceptGame transaction must include participant color and board`() {
+    fun `AcceptGame transaction must include participant color`() {
         val gameState = GameState(initiator = alice,
                 participant = bob,
                 initiatorColor = Color.RED,
@@ -236,7 +233,6 @@ class GameContractTests {
                     gameState.initiatorColor,
                     null,
                     gameState.boardSize,
-                    UniqueIdentifier(),
                     GameStatus.ACCEPTED ))
             command(bob.owningKey,GameContract.Commands.AcceptGame())
             `fails with`("The Participant should select a color.")
@@ -249,11 +245,20 @@ class GameContractTests {
                     gameState.initiatorColor,
                     gameState.initiatorColor,
                     gameState.boardSize,
-                    UniqueIdentifier(),
                     GameStatus.ACCEPTED ))
             command(bob.owningKey,GameContract.Commands.AcceptGame())
             `fails with`("The Participant should select a color.")
         }
+    }
+
+    @Test
+    fun `AcceptGame transaction must be signed by participant`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                boardSize = Pair(10,10),
+                status = GameStatus.PENDING)
+
         ledgerServices.transaction {
             input(GameContract.ID, gameState)
             output(GameContract.ID, GameState(gameState.linearId,
@@ -262,10 +267,218 @@ class GameContractTests {
                     gameState.initiatorColor,
                     Color.BLACK,
                     gameState.boardSize,
-                    null,
                     GameStatus.ACCEPTED ))
-            command(bob.owningKey,GameContract.Commands.AcceptGame())
-            `fails with`("The the board issued should be referenced.")
+            command(alice.owningKey,GameContract.Commands.AcceptGame())
+            `fails with`("The participant should sign.")
+        }
+    }
+
+    @Test
+    fun `RejectGame transaction must have correct inputs and outputs`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                boardSize = Pair(10,10),
+                status = GameStatus.PENDING)
+
+        ledgerServices.transaction {
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    Color.BLACK,
+                    gameState.boardSize,
+                    GameStatus.REJECTED ))
+            command(bob.owningKey,GameContract.Commands.RejectGame())
+            `fails with`("One game can be consumed, in inputs, when rejecting a new game.")
+            input(GameContract.ID, gameState)
+            verifies()
+        }
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            command(bob.owningKey,GameContract.Commands.RejectGame())
+            `fails with`("There should be one game as an output.")
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    Color.BLACK,
+                    gameState.boardSize,
+                    GameStatus.REJECTED ))
+            verifies()
+        }
+
+    }
+
+
+    @Test
+    fun `RejectGame transaction must be in REJECTED status`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                boardSize = Pair(10,10),
+                status = GameStatus.PENDING)
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    Color.BLACK,
+                    gameState.boardSize,
+                    GameStatus.ACCEPTED ))
+            command(bob.owningKey,GameContract.Commands.RejectGame())
+            `fails with`("The game should be rejected by the Participant.")
+        }
+    }
+
+    @Test
+    fun `RejectGame transaction must be signed by participant`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                boardSize = Pair(10, 10),
+                status = GameStatus.PENDING)
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    null,
+                    gameState.boardSize,
+                    GameStatus.REJECTED))
+            command(alice.owningKey, GameContract.Commands.RejectGame())
+            `fails with`("The participant should sign.")
+        }
+    }
+
+    @Test
+    fun `Complete transaction must have correct inputs and outputs`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                participantColor = Color.BLACK,
+                boardSize = Pair(10,10),
+                status = GameStatus.ACTIVE)
+
+        ledgerServices.transaction {
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    gameState.participantColor,
+                    gameState.boardSize,
+                    GameStatus.COMPLETE,
+                    gameState.initiator))
+            command(listOf(alice.owningKey, bob.owningKey),GameContract.Commands.CompleteGame())
+            `fails with`("One game can be consumed, in inputs, when completing a new game.")
+            input(GameContract.ID, gameState)
+            verifies()
+        }
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            command(listOf(alice.owningKey, bob.owningKey),GameContract.Commands.CompleteGame())
+            `fails with`("There should be one game as an output.")
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    gameState.participantColor,
+                    gameState.boardSize,
+                    GameStatus.COMPLETE,
+                    gameState.initiator))
+            verifies()
+        }
+
+    }
+
+    @Test
+    fun `Complete transaction must declare a victor`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                participantColor = Color.BLACK,
+                boardSize = Pair(10,10),
+                status = GameStatus.ACTIVE)
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    gameState.participantColor,
+                    gameState.boardSize,
+                    GameStatus.COMPLETE,
+                    null))
+            command(listOf(alice.owningKey, bob.owningKey),GameContract.Commands.CompleteGame())
+            `fails with`("The game should declare a victor when completed.")
+        }
+    }
+
+    @Test
+    fun `Complete transaction with DRAW must not declare a victor`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                participantColor = Color.BLACK,
+                boardSize = Pair(10,10),
+                status = GameStatus.ACTIVE)
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    gameState.participantColor,
+                    gameState.boardSize,
+                    GameStatus.DRAW,
+                    gameState.initiator))
+            command(listOf(alice.owningKey, bob.owningKey),GameContract.Commands.CompleteGame())
+            `fails with`("The game should not declare a victor when a draw.")
+        }
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    gameState.participantColor,
+                    gameState.boardSize,
+                    GameStatus.DRAW,
+                    null))
+            command(listOf(alice.owningKey, bob.owningKey),GameContract.Commands.CompleteGame())
+            verifies()
+        }
+    }
+
+    @Test
+    fun `Complete transaction must be signed by both participants`() {
+        val gameState = GameState(initiator = alice,
+                participant = bob,
+                initiatorColor = Color.RED,
+                participantColor = Color.BLACK,
+                boardSize = Pair(10,10),
+                status = GameStatus.ACTIVE)
+
+        ledgerServices.transaction {
+            input(GameContract.ID, gameState)
+            output(GameContract.ID, GameState(gameState.linearId,
+                    gameState.initiator,
+                    gameState.participant,
+                    gameState.initiatorColor,
+                    gameState.participantColor,
+                    gameState.boardSize,
+                    GameStatus.COMPLETE,
+                    gameState.initiator))
+            command(listOf(bob.owningKey),GameContract.Commands.CompleteGame())
+            `fails with`("The both initiator and participant should sign.")
         }
     }
 }

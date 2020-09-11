@@ -52,7 +52,6 @@ class GameContract : Contract {
                 "There should be two distinct participants in the game." using (outputs[0].participants.distinct().count() == 2)
                 "The game should be accepted by the Participant." using (outputs[0].status == GameStatus.ACCEPTED)
                 "The Participant should select a color." using (Color.values().contains(outputs[0].participantColor) && outputs[0].participantColor != outputs[0].initiatorColor)
-                "The the board issued should be referenced." using (outputs[0].boardState != null)
 
                 // Constraints on the signers.
                 "The participant should sign." using command.signers.containsAll(outputs.map { it.participant.owningKey }.distinct())
@@ -66,7 +65,6 @@ class GameContract : Contract {
                 //Constraints on the shape of the GameState
                 "There should be two distinct participants in the game." using (outputs[0].participants.distinct().count() == 2)
                 "The game should be rejected by the Participant." using (outputs[0].status == GameStatus.REJECTED)
-                "The Participant should select a color." using (Color.values().contains(outputs[0].participantColor))
 
                 // Constraints on the signers.
                 "The participant should sign." using command.signers.containsAll(outputs.map { it.participant.owningKey }.distinct())
@@ -85,7 +83,6 @@ class GameContract : Contract {
                         "The game should not declare a victor when a draw." using (outputs[0].victor == null)
                     else -> throw IllegalArgumentException("You can only complete a game if there is a victor or a draw.")
                 }
-                "The game should be in a complete state with a victor." using (outputs[0].status == GameStatus.COMPLETE)
 
                 // Constraints on the signers.
                 "The both initiator and participant should sign." using command.signers.containsAll(outputs[0].participants.map { it.owningKey }.distinct())

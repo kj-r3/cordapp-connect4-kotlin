@@ -33,7 +33,6 @@ class GameStateTests {
         assertEquals(participants, gameState.participants)
         assertEquals(boardSize, gameState.boardSize)
         assertNotNull(gameState.linearId)
-        assertNull(gameState.boardState)
         assertNull(gameState.participantColor)
         assertNull(gameState.victor)
     }
@@ -53,7 +52,6 @@ class GameStateTests {
         assertEquals(participants, gameState.participants)
         assertEquals(boardSize, gameState.boardSize)
         assertNotNull(gameState.linearId)
-        assertNull(gameState.boardState)
         assertNull(gameState.participantColor)
         assertNull(gameState.victor)
     }
@@ -62,7 +60,6 @@ class GameStateTests {
     fun `GameState accepted with passed UniqueIdentifier and expected values`() {
         val linearId = UniqueIdentifier()
         val participantColor: Color = Color.RED
-        val boardState = UniqueIdentifier()
 
         val gameState = GameState(linearId = linearId,
                 initiator = initiator,
@@ -70,7 +67,6 @@ class GameStateTests {
                 participant = participant,
                 participantColor =  participantColor,
                 boardSize = boardSize,
-                boardState = boardState,
                 status = GameStatus.ACCEPTED)
 
         assertEquals(linearId, gameState.linearId)
@@ -81,7 +77,6 @@ class GameStateTests {
         assertEquals(GameStatus.ACCEPTED, gameState.status)
         assertEquals(participants, gameState.participants)
         assertEquals(boardSize, gameState.boardSize)
-        assertEquals(boardState, gameState.boardState)
         assertNull(gameState.victor)
 
     }
@@ -90,7 +85,6 @@ class GameStateTests {
     fun `GameState active with passed UniqueIdentifier and expected values`() {
         val linearId = UniqueIdentifier()
         val participantColor: Color = Color.RED
-        val boardState = UniqueIdentifier()
 
         val gameState = GameState(linearId = linearId,
                 initiator = initiator,
@@ -98,7 +92,6 @@ class GameStateTests {
                 participant = participant,
                 participantColor =  participantColor,
                 boardSize = boardSize,
-                boardState = boardState,
                 status = GameStatus.ACTIVE)
 
         assertEquals(linearId, gameState.linearId)
@@ -109,7 +102,6 @@ class GameStateTests {
         assertEquals(GameStatus.ACTIVE, gameState.status)
         assertEquals(participants, gameState.participants)
         assertEquals(boardSize, gameState.boardSize)
-        assertEquals(boardState, gameState.boardState)
         assertNull(gameState.victor)
 
     }
@@ -118,7 +110,6 @@ class GameStateTests {
     fun `GameState completed with passed UniqueIdentifier and expected values`() {
         val linearId = UniqueIdentifier()
         val participantColor: Color = Color.RED
-        val boardState = UniqueIdentifier()
 
         val gameState = GameState(linearId = linearId,
                 initiator = initiator,
@@ -126,7 +117,6 @@ class GameStateTests {
                 participant = participant,
                 participantColor =  participantColor,
                 boardSize = boardSize,
-                boardState = boardState,
                 victor = initiator,
                 status = GameStatus.COMPLETE)
 
@@ -138,7 +128,6 @@ class GameStateTests {
         assertEquals(GameStatus.COMPLETE, gameState.status)
         assertEquals(participants, gameState.participants)
         assertEquals(boardSize, gameState.boardSize)
-        assertEquals(boardState, gameState.boardState)
         assertEquals(initiator, gameState.victor)
 
     }

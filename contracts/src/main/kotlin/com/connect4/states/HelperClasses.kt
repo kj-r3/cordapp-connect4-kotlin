@@ -14,5 +14,7 @@ enum class Color {
 }
 
 @CordaSerializable
-data class Cell(val i: Int, val j: Int, val occupant: Party)
+data class Cell(val i: Int, val j: Int, val occupant: Party) {
+    fun getPosition(): Pair<Int,Int> = Pair(i,j)
+}
 

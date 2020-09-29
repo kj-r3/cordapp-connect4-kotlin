@@ -87,6 +87,18 @@ class GameContract : Contract {
                 // Constraints on the signers.
                 "The both initiator and participant should sign." using command.signers.containsAll(outputs[0].participants.map { it.owningKey }.distinct())
             }
+            is Commands.Activate -> requireThat {
+                //Constraints on the shape of the transaction
+                "One game can be consumed, in inputs, when activating a new game." using (inputs.size == 1)
+                "There should be one game as an output." using (outputs.size == 1)
+
+                //Constraints on the shape of the GameState
+                "There should be two distinct participants in the game." using (outputs[0].participants.distinct().count() == 2)
+                "The input game must be accepted and output game must be active" using (inputs[0].status == GameStatus.ACCEPTED && outputs[0].status == GameStatus.ACTIVE)
+
+                // Constraints on the signers.
+                "The initiator should sign." using command.signers.containsAll(outputs.map { it.initiator.owningKey }.distinct())
+            }
             else -> throw IllegalArgumentException("Unknown command ${command.value}.")
         }
     }
@@ -97,5 +109,6 @@ class GameContract : Contract {
         class RejectGame : Commands
         class AcceptGame : Commands
         class CompleteGame : Commands
+        class Activate : Commands
     }
 }

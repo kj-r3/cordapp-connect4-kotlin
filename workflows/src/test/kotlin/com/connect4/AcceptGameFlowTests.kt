@@ -28,6 +28,7 @@ class AcceptGameFlowTests {
         listOf(a, b).forEach {
             it.registerInitiatedFlow(NewGameFlow.Responder::class.java)
             it.registerInitiatedFlow(AcceptGameFlow.Responder::class.java)
+            it.registerInitiatedFlow(RejectGameFlow.Responder::class.java)
         }
     }
 
@@ -56,6 +57,15 @@ class AcceptGameFlowTests {
     @Test
     fun `Accept Game fails with same color`() {
         val flow = AcceptGameFlow.Initiator(a.issueNewGame(network, b.info.legalIdentities[0])[0].state.data.linearId, "RED")
+        val future = b.startFlow(flow)
+        network.runNetwork()
+
+        assertFailsWith<TransactionVerificationException>{ future.getOrThrow()}
+    }
+
+    @Test
+    fun `Cannot accept game that has been rejected`() {
+        val flow = AcceptGameFlow.Initiator(b.issueRejectedGame(network, b.info.legalIdentities[0], a)[0].state.data.linearId, "RED")
         val future = b.startFlow(flow)
         network.runNetwork()
 

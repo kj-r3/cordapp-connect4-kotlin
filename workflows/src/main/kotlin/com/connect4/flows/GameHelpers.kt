@@ -1,8 +1,9 @@
 package com.connect4.flows
 
-import com.connect4.states.*
+import com.connect4.states.Cell
+import com.connect4.states.GameStatus
+import com.connect4.states.getCellOccupantByPosition
 import net.corda.core.identity.Party
-import kotlin.streams.toList
 
 object GameValidator {
 
@@ -78,6 +79,13 @@ object GameValidator {
 
                 occupant = getCellOccupantByPosition(boardCells, (maxIndex - i) + j, j)
                 if (occupant != null ) cornerValues.add(TOP_RIGHT, occupant)
+            }
+
+            for (corner in 0 until 4) {
+                if (cornerValues.has4Match(corner)) {
+                    val positions = cornerValues[corner]?.toList()?.takeLast(4)!!
+                    return positions[0]
+                }
             }
 
         }

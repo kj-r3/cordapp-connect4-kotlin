@@ -7,7 +7,6 @@ import net.corda.testing.core.TestIdentity
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 class BoardStateTests {
     private val participant: Party = TestIdentity(CordaX500Name("Alice", "London", "GB")).party
@@ -30,7 +29,7 @@ class BoardStateTests {
         assertEquals(GameStatus.ACTIVE, boardState.status)
         assertEquals(listOf(initiator,participant), boardState.participants)
         assertNotNull(boardState.linearId)
-        assertNull(boardState.boardMap)
+        assertNotNull(boardState.boardMap)
     }
 
     @Test

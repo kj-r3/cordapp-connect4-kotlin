@@ -8,7 +8,6 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireSingleCommand
 import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
-import java.lang.IllegalArgumentException
 
 // ************
 // * Contract *
@@ -50,6 +49,7 @@ class GameContract : Contract {
 
                 //Constraints on the shape of the GameState
                 "There should be two distinct participants in the game." using (outputs[0].participants.distinct().count() == 2)
+                "The input game state should be PENDING." using (inputs[0].status == GameStatus.PENDING)
                 "The game should be accepted by the Participant." using (outputs[0].status == GameStatus.ACCEPTED)
                 "The Participant should select a color." using (Color.values().contains(outputs[0].participantColor) && outputs[0].participantColor != outputs[0].initiatorColor)
 
@@ -64,6 +64,7 @@ class GameContract : Contract {
 
                 //Constraints on the shape of the GameState
                 "There should be two distinct participants in the game." using (outputs[0].participants.distinct().count() == 2)
+                "The input game state should be PENDING." using (inputs[0].status == GameStatus.PENDING)
                 "The game should be rejected by the Participant." using (outputs[0].status == GameStatus.REJECTED)
 
                 // Constraints on the signers.
@@ -76,6 +77,7 @@ class GameContract : Contract {
 
                 //Constraints on the shape of the GameState
                 "There should be two distinct participants in the game." using (outputs[0].participants.distinct().count() == 2)
+                "The input game state should be ACTIVE." using (inputs[0].status == GameStatus.ACTIVE)
                 when (outputs[0].status) {
                     GameStatus.COMPLETE ->
                         "The game should declare a victor when completed." using (outputs[0].victor != null)
